@@ -1,5 +1,6 @@
 package com.agriconnect.backend.config;
 
+import com.agriconnect.backend.filter.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,29 +17,28 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-   /* @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // ✅ Disable CSRF for API requests
-                .cors(cors -> cors.disable()) // (optional) disable if you handle CORS elsewhere
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/api/register", "/api/test").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .formLogin(login -> login.disable()) // disable form login
-                .httpBasic(basic -> basic.disable()); // disable basic auth
 
-        return http.build();
-    }*/
    @Bean
-   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+   public SecurityFilterChain filterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
        http
                .csrf(csrf -> csrf.disable())
+               .cors(cors -> {}) //enable cors (cross-origin resource sharing)
                .authorizeHttpRequests(auth -> auth
-                       .anyRequest().permitAll()
+               .requestMatchers("/login", "/signup").permitAll()
+               .anyRequest().authenticated()
                )
                .formLogin(form -> form.disable())
-               .httpBasic(basic -> basic.disable());
+               .httpBasic(basic -> basic.disable())
+               .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+
        return http.build();
+   }
+
+   @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource(){
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+
+
+
    }
 }

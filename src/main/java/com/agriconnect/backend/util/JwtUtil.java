@@ -23,10 +23,12 @@ public class JwtUtil {
                 .setSubject(user.getEmail())
                 .claim("role", user.getRole())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
+                .setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 minutes
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
+
+
 
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
@@ -34,5 +36,15 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public boolean isTokenValid(String token, User user){
+        final String email = extractClaims(token).getSubject();
+        return (email.equals(user.getEmail()) && !isTokenExpired(token));
+
+    }
+
+    private boolean isTokenExpired(String token){
+        return extractClaims(token).getExpiration().before(new Date());
     }
 }
