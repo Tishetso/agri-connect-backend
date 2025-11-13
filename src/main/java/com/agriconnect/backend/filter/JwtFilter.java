@@ -28,27 +28,38 @@ public class JwtFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
+        String path = httpRequest.getRequestURI();
+        if (path.equals("/api/login") || path.equals("/register")){
+            chain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = httpRequest.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
             try {
-                jwtUtil.extractClaims(token); // validate token
+                var claims = jwtUtil.extractClaims(token);
+                httpRequest.setAttribute("claims",claims); //attach claims
+                /*jwtUtil.extractClaims(token); // validate token*/
                 chain.doFilter(request, response); // continue if valid
 
             } catch (ExpiredJwtException e) {
+                httpResponse.setContentType("application/json");
                 httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 httpResponse.getWriter().write("Session timed out");
                 return;
 
             } catch (JwtException e) {
+                httpResponse.setContentType("application/json");
                 httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 httpResponse.getWriter().write("Invalid token");
                 return;
             }
         } else {
             // No token provided
+            httpResponse.setContentType("application/json");
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             httpResponse.getWriter().write("Authorization header missing");
         }
