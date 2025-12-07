@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/listings")
-@CrossOrigin("*")
+
 public class ListingController {
     private static final String UPLOAD_DIR = "uploads/";
 
@@ -28,9 +28,12 @@ public class ListingController {
     public ResponseEntity<?> createListing(
             @RequestPart("product") String product,
             @RequestPart("quantity") String quantity,
-            @RequestPart("price") Double price,
+            @RequestPart("price") String priceStr,
             @RequestPart("images") List<MultipartFile> images
     ) throws IOException {
+
+        Double price = Double.parseDouble(priceStr.trim());
+
         List<String> uploadedFiles = new ArrayList<>();
 
         for (MultipartFile file : images) {
