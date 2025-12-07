@@ -1,21 +1,43 @@
 package com.agriconnect.backend.model;
 
 import jakarta.persistence.*;
-
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "listing")  // This forces lowercase table name (critical for MySQL!)
 public class Listing {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;                    // YOU WERE MISSING THE ID!!
+
+    @Column(nullable = false)
     private String product;
+
+    @Column(nullable = false)
     private String quantity;
+
+    @Column(nullable = false)
     private Double price;
 
-    @ElementCollection
-    private List<String> imageUrls; //Stores filenames or URLs
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "listing_images", joinColumns = @JoinColumn(name = "listing_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();
 
+    @Column(nullable = false)
     private String status = "Available";
+
+    // === GETTERS & SETTERS ===
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getProduct() {
         return product;
