@@ -29,6 +29,7 @@ public class Listing {
     @Column(nullable = false)
     private String status = "Available";
 
+
     // === GETTERS & SETTERS ===
 
     public Long getId() {
