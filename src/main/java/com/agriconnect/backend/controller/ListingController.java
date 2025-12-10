@@ -55,10 +55,11 @@ public class ListingController {
         return ResponseEntity.ok(service.saveListing(listing));
     }
 
-    @GetMapping
+    /*@GetMapping
     public List<Listing> getAllListings() {
         return service.findAll();
-    }
+    }*/
+
 
 
 
