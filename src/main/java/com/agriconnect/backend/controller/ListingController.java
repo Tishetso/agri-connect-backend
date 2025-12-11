@@ -5,6 +5,7 @@ import com.agriconnect.backend.service.ListingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -55,10 +56,35 @@ public class ListingController {
         return ResponseEntity.ok(service.saveListing(listing));
     }
 
-    /*@GetMapping
-    public List<Listing> getAllListings() {
-        return service.findAll();
-    }*/
+
+
+    //calling the listings here
+    @GetMapping("/myListings")
+    public List<Listing> getMyListings(Authentication auth){
+        String email = auth.getName();
+        return service.findByUserEmail(email);
+    }
+
+    //Delete
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteListing(@PathVariable Long id, Authentication auth){
+        Listing listing = service.findById(id);
+        if (!listing.getUser().getEmail().equals(auth.getName())){
+            return ResponseEntity.status(403).build();
+        }
+        service.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Listing> updateListing(@PathVariable Long id,
+                                                 @RequestPart("product") String product,
+                                                 @RequestPart("quantity") String quantity,
+                                                 @RequestPart("price") String priceStr,
+                                                 @RequestPart(value = "images", required = false) List<MultipartFile> images,
+                                                 Authentication auth){
+        return x;
+    }
 
 
 
