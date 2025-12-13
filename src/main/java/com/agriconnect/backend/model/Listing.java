@@ -29,6 +29,13 @@ public class Listing {
     @Column(nullable = false)
     private String status = "Available";
 
+    //add relationship to user
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+
+
 
     // === GETTERS & SETTERS ===
 
@@ -78,5 +85,13 @@ public class Listing {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

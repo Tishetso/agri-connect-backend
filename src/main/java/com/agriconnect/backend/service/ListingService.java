@@ -27,4 +27,9 @@ public class ListingService {
     public void deleteListing(Long id){
         repo.deleteById(id);
     }
+
+    public List<Listing> findByUserEmail(String email){
+        return repo.findByUserEmail(email);
+    }
+
 }
