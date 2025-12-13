@@ -72,7 +72,7 @@ public class ListingController {
         if (!listing.getUser().getEmail().equals(auth.getName())){
             return ResponseEntity.status(403).build();
         }
-        service.deleteById(id);
+        service.deleteListing(id);
         return ResponseEntity.ok().build();
     }
 
@@ -80,10 +80,41 @@ public class ListingController {
     public ResponseEntity<Listing> updateListing(@PathVariable Long id,
                                                  @RequestPart("product") String product,
                                                  @RequestPart("quantity") String quantity,
-                                                 @RequestPart("price") String priceStr,
-                                                 @RequestPart(value = "images", required = false) List<MultipartFile> images,
-                                                 Authentication auth){
-        return x;
+                                                 @RequestPart("price") String priceStr,//avoiding the octet stream error
+                                                 @RequestPart(value = "images", required = false) List<MultipartFile> newImages, //can be empty or missing
+                                                 @RequestPart(value = "existingImages", required = false) String existingImagesJson,//optional: list of filenames to keep
+                                                 Authentication auth) throws IOException {
+        //1. Security check
+        Listing existingListing = service.findById(id);
+        if (existingListing == null){
+            return ResponseEntity.notFound().build();
+        }
+        if(!existingListing.getUser().getEmail().equals(auth.getName())){
+            return ResponseEntity.status(403).build();
+        }
+
+        //2.Parse price
+        Double price = Double.parseDouble(priceStr.trim());
+
+        //3. Handle images
+        List<String> finalImageUrls = new ArrayList<>();
+
+        //keep existing images that user wants to retain ( sent as JSON array of filenames
+        if (existingImagesJson != null && !existingImagesJson.isBlank()){
+            String cleaned = existingImagesJson.trim();
+            if(cleaned.startsWith("[") && cleaned.endsWith("]")){
+                cleaned = cleaned.substring(1, cleaned.length() - 1);
+                String[] parts = cleaned.split(",");
+                for(String part : parts){
+                    String filename = part.trim().replace("\"","");
+                    if (!filename.isEmpty()){
+                        finalImageUrls.add(filename);
+                    }
+                }
+            }
+        }
+
+        return ResponseEntity.ok;
     }
 
 
