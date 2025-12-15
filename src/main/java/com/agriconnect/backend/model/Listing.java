@@ -1,5 +1,6 @@
 package com.agriconnect.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +31,9 @@ public class Listing {
     private String status = "Available";
 
     //add relationship to user
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore // this line fixes the serialization error
     private User user;
 
 
