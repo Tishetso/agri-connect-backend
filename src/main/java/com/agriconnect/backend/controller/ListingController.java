@@ -29,44 +29,47 @@ public class ListingController {
     @Autowired
     private userService userService;
 
-    @PostMapping(value = "/create")
-    public ResponseEntity<?> createListing(
+    @PostMapping("/create")
+    public ResponseEntity<Listing> createListing(
             @RequestPart("product") String product,
             @RequestPart("quantity") String quantity,
             @RequestPart("price") String priceStr,
             @RequestPart("images") List<MultipartFile> images,
             Authentication auth) throws IOException {
 
-        Double price = Double.parseDouble(priceStr.trim());
+        try {
+            Double price = Double.parseDouble(priceStr.trim());
 
-        //Get current user from JWT
-        String email = auth.getName();
-        User currentUser = userService.findByEmail(email);
-        if(currentUser == null) {
-            return ResponseEntity.status(401).build();
+            String email = auth.getName();
+            User currentUser = userService.findByEmail(email);
+            if (currentUser == null) {
+                return ResponseEntity.status(401).body(null);
+            }
+
+            List<String> uploadedFiles = new ArrayList<>();
+            for (MultipartFile file : images) {
+                if (!file.isEmpty()) {
+                    String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                    Path filePath = Paths.get(UPLOAD_DIR + filename);
+                    Files.createDirectories(filePath.getParent());
+                    Files.write(filePath, file.getBytes());
+                    uploadedFiles.add(filename);
+                }
+            }
+
+            Listing listing = new Listing();
+            listing.setProduct(product);
+            listing.setQuantity(quantity);
+            listing.setPrice(price);
+            listing.setImageUrls(uploadedFiles);
+            listing.setUser(currentUser);
+
+            Listing saved = service.saveListing(listing);
+            return ResponseEntity.ok(saved);  // ← Always return the saved listing
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
         }
-
-
-        List<String> uploadedFiles = new ArrayList<>();
-
-        for (MultipartFile file : images) {
-            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(UPLOAD_DIR + filename);
-
-            Files.createDirectories(filePath.getParent());
-            Files.write(filePath, file.getBytes());
-
-            uploadedFiles.add(filename);
-        }
-
-        Listing listing = new Listing();
-        listing.setProduct(product);
-        listing.setQuantity(quantity);
-        listing.setPrice(price);
-        listing.setImageUrls(uploadedFiles);
-        listing.setUser(currentUser);
-
-        return ResponseEntity.ok(service.saveListing(listing));
     }
 
 
