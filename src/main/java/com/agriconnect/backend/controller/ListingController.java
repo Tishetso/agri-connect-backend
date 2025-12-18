@@ -1,15 +1,19 @@
 package com.agriconnect.backend.controller;
 
+import com.agriconnect.backend.dto.ListingDTO;
 import com.agriconnect.backend.model.Listing;
 import com.agriconnect.backend.model.User;
 import com.agriconnect.backend.service.ListingService;
 import com.agriconnect.backend.service.userService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,12 +34,20 @@ public class ListingController {
     private userService userService;
 
     @PostMapping("/create")
-    public ResponseEntity<Listing> createListing(
+    public ResponseEntity<ListingDTO> createListing(
             @RequestPart("product") String product,
             @RequestPart("quantity") String quantity,
             @RequestPart("price") String priceStr,
             @RequestPart("images") List<MultipartFile> images,
-            Authentication auth) throws IOException {
+            Authentication auth,
+            HttpServletRequest request) throws IOException {
+
+        System.out.println("=== RECEIVED REQUEST ===");
+        System.out.println("Content-Type: " + request.getContentType());
+        System.out.println("Product: " + product);
+        System.out.println("Quantity: " + quantity);
+        System.out.println("Price: " + priceStr);
+        System.out.println("Images count: " + (images != null ? images.size() : 0));
 
         try {
             Double price = Double.parseDouble(priceStr.trim());
@@ -65,8 +77,21 @@ public class ListingController {
             listing.setUser(currentUser);
 
             Listing saved = service.saveListing(listing);
-            return ResponseEntity.ok(saved);  // ← Always return the saved listing
+
+            // Convert to DTO before returning
+            ListingDTO dto = new ListingDTO(
+                    saved.getId(),
+                    saved.getProduct(),
+                    saved.getQuantity(),
+                    saved.getPrice(),
+                    saved.getImageUrls(),
+                    saved.getStatus()
+            );
+
+            System.out.println("=== RETURNING DTO ===");
+            return ResponseEntity.ok(dto); // ← Always return the saved listing
         } catch (Exception e) {
+            System.err.println("=== ERROR IN CONTROLLER ===");
             e.printStackTrace();
             return ResponseEntity.status(500).body(null);
         }
