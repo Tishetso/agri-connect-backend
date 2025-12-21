@@ -39,6 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/listings/create").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/listings/**" ).authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/listings/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())

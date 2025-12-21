@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -98,65 +99,94 @@ public class ListingController {
     }
 
 
-
     //calling the listings here
     @GetMapping("/myListings")
-    public List<Listing> getMyListings(Authentication auth){
+    public List<Listing> getMyListings(Authentication auth) {
         String email = auth.getName();
         return service.findByUserEmail(email);
     }
 
     //Delete
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteListing(@PathVariable Long id, Authentication auth){
+    @Transactional
+    public ResponseEntity<?> deleteListing(@PathVariable Long id, Authentication auth) {
         Listing listing = service.findById(id);
-        if (!listing.getUser().getEmail().equals(auth.getName())){
+
+        if (listing == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        //Access the user's email within the transaction
+        String ownerEmail = listing.getUser().getEmail();
+        String currentUserEmail = auth.getName();
+
+        //changed the condition
+        if (!ownerEmail.equals(currentUserEmail)) {
             return ResponseEntity.status(403).build();
         }
+
         service.deleteListing(id);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Listing> updateListing(
+    @Transactional
+    public ResponseEntity<ListingDTO> updateListing(
             @PathVariable Long id,
             @RequestPart("product") String product,
             @RequestPart("quantity") String quantity,
             @RequestPart("price") String priceStr,
             @RequestPart(value = "images", required = false) List<MultipartFile> newImages,
             @RequestPart(value = "existingImages", required = false) String existingImagesJson,
-            Authentication auth) throws IOException {
+            Authentication auth,
+            HttpServletRequest request) throws IOException {
+
+        System.out.println("=== UPDATE REQUEST ===");
+        System.out.println("Product: " + product);
+        System.out.println("Existing images JSON: " + existingImagesJson);
+        System.out.println("New images count: " + (newImages != null ? newImages.size() : 0));
 
         // 1. Find and secure the listing
         Listing existingListing = service.findById(id);
         if (existingListing == null) {
             return ResponseEntity.notFound().build();
         }
-        if (!existingListing.getUser().getEmail().equals(auth.getName())) {
+
+        String ownerEmail = existingListing.getUser().getEmail();
+        String currentUserEmail = auth.getName();
+
+        if (!ownerEmail.equals(currentUserEmail)) {
             return ResponseEntity.status(403).build();
         }
 
         // 2. Parse price
         Double price = Double.parseDouble(priceStr.trim());
 
-        // 3. Start with images user wants to keep
+        // 3. Handle images
         List<String> finalImageUrls = new ArrayList<>();
 
+        // First, add existing images if provided
         if (existingImagesJson != null && !existingImagesJson.isBlank()) {
-            String cleaned = existingImagesJson.trim();
-            if (cleaned.startsWith("[") && cleaned.endsWith("]")) {
-                cleaned = cleaned.substring(1, cleaned.length() - 1);
-                String[] parts = cleaned.split(",");
-                for (String part : parts) {
-                    String filename = part.trim().replaceAll("^\"|\"$", ""); // remove quotes
+            try {
+                // Parse JSON array of filenames
+                existingImagesJson = existingImagesJson.trim();
+                if (existingImagesJson.startsWith("[") && existingImagesJson.endsWith("]")) {
+                    existingImagesJson = existingImagesJson.substring(1, existingImagesJson.length() - 1);
+                }
+
+                String[] filenames = existingImagesJson.split(",");
+                for (String filename : filenames) {
+                    filename = filename.trim().replaceAll("^\"|\"$", "");
                     if (!filename.isEmpty()) {
                         finalImageUrls.add(filename);
                     }
                 }
+            } catch (Exception e) {
+                System.err.println("Error parsing existing images: " + e.getMessage());
             }
         }
 
-        // 4. ADD NEW UPLOADED IMAGES (THIS WAS MISSING!)
+        // Then, add new uploaded images
         if (newImages != null && !newImages.isEmpty()) {
             for (MultipartFile file : newImages) {
                 if (!file.isEmpty()) {
@@ -169,12 +199,26 @@ public class ListingController {
             }
         }
 
-        // 5. Update the listing
+        System.out.println("Final image URLs: " + finalImageUrls);
+
+        // 4. Update the listing
         existingListing.setProduct(product);
         existingListing.setQuantity(quantity);
         existingListing.setPrice(price);
         existingListing.setImageUrls(finalImageUrls);
 
         Listing updated = service.saveListing(existingListing);
-        return ResponseEntity.ok(updated);
-    }}
+
+        // 5. Return DTO
+        ListingDTO dto = new ListingDTO(
+                updated.getId(),
+                updated.getProduct(),
+                updated.getQuantity(),
+                updated.getPrice(),
+                updated.getImageUrls(),
+                updated.getStatus()
+        );
+
+        return ResponseEntity.ok(dto);
+    }
+}
