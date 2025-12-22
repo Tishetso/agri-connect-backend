@@ -19,7 +19,7 @@ public class JwtUtil {
 
     private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
-    private static final long JWT_TOKEN_VALIDITY = 24 * 60 * 60;
+    private static final long JWT_TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
 
     public String generateToken(User user) {
         return Jwts.builder()
@@ -30,7 +30,7 @@ public class JwtUtil {
 
 
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY)) // 5 minutes
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY)) // 24hr
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
