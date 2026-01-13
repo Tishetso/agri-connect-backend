@@ -36,7 +36,7 @@ public class AuthController {
             User user = userOpt.get();
             if (passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
                 String token = jwtUtil.generateToken(user);
-                return ResponseEntity.ok(Map.of("token", token, "role", user.getRole(), "name", user.getName(),
+                return ResponseEntity.ok(Map.of("token", token, "role", user.getRole(), "name", user.getName(),"surname", user.getSurname(),
                         "region", user.getRegion()));
             }
         }
