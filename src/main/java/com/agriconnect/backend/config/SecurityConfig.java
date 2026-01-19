@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/login", "/api/register").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/marketplace").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/listings/create").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/listings/**" ).authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/listings/**").authenticated()
