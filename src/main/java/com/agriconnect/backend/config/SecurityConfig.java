@@ -35,14 +35,40 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ← FIXED!
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/api/register").permitAll()
+
+                                // Public endpoints - no authentication required
+                                .requestMatchers("/api/login", "/api/register").permitAll()
+                                .requestMatchers("/uploads/**").permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+
+                        //Marketplace browsing - public access ( anyone can browse)
+                                .requestMatchers(HttpMethod.GET, "/api/marketplace").permitAll()
+
+                        //Guest checkout to be implemented
+
+                        //Listing management - farmers only, authenticated
+                                .requestMatchers(HttpMethod.POST, "/api/listings/create").authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/api/listings/**").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/api/listings/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/listings/myListings").authenticated()
+
+                        //Shopping cart - consumers only, authenticated
+                                .requestMatchers("/api/cart/**").authenticated()
+
+                        //All other endpoints require authentication
+                                .anyRequest().authenticated()
+
+
+
+                        /*.requestMatchers("/api/login", "/api/register").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/marketplace").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/listings/create").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/listings/**" ).authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/listings/**").authenticated()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated()*/
                 )
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
