@@ -19,20 +19,34 @@ public class CartController {
     private CartService cartService;
 
     /*POST /api/cart/add - Add item to cart*/
-
     @PostMapping("/add")
-    public ResponseEntity<?> addToCard(
-            @RequestBody Map<String, Object> payload,
-            Authentication auth){
+    public ResponseEntity<?> addToCart(  // ← FIXED: was addToCard
+                                         @RequestBody Map<String, Object> payload,
+                                         Authentication auth){
         try{
+            // Add logging to debug
+            System.out.println("Received payload: " + payload);
+
+            // Check if required fields exist
+            if (payload.get("listingId") == null || payload.get("quantity") == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "listingId and quantity are required"));
+            }
+
             Long listingId = Long.valueOf(payload.get("listingId").toString());
             Integer quantity = Integer.valueOf(payload.get("quantity").toString());
             String email = auth.getName();
 
-            CartDTO cart = cartService.addToCart(email,listingId, quantity);
+            System.out.println("Adding to cart - listingId: " + listingId + ", quantity: " + quantity + ", email: " + email);
+
+            CartDTO cart = cartService.addToCart(email, listingId, quantity);
             return ResponseEntity.ok(cart);
 
-        }catch(Exception e){
+        } catch(NumberFormatException e){
+            System.err.println("Invalid number format: " + e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Invalid listingId or quantity format"));
+        } catch(Exception e){
             System.err.println("Error adding to cart: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -41,7 +55,6 @@ public class CartController {
     }
 
     /*GET /api/cart - Get all carts for logged-in consumer*/
-
     @GetMapping
     public ResponseEntity<?> getConsumerCarts(Authentication auth){
         try{
@@ -58,6 +71,7 @@ public class CartController {
     }
 
     /*PUT /api/cart/item/{itemId} - Update cart item quantity*/
+    @PutMapping("/item/{itemId}")  // ← ADDED: was missing annotation
     public ResponseEntity<?> updateCartItem(
             @PathVariable Long itemId,
             @RequestBody Map<String, Integer> payload){
@@ -67,20 +81,19 @@ public class CartController {
             return ResponseEntity.ok(cart);
 
         }catch (Exception e){
-         System.err.println("Error updating cart item: " + e.getMessage());
-         e.printStackTrace();
+            System.err.println("Error updating cart item: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
-
         }
     }
 
-    /*Delete /api/cart/item/{item} - Removes an item from the cart*/
+    /*Delete /api/cart/item/{itemId} - Removes an item from the cart*/
     @DeleteMapping("/item/{itemId}")
     public ResponseEntity<?> removeCartItem(@PathVariable Long itemId){
         try{
             cartService.removeCartItem(itemId);
-            return ResponseEntity.ok(Map.of("Message", "Item removed from cart"));
+            return ResponseEntity.ok(Map.of("message", "Item removed from cart"));
 
         }catch(Exception e){
             System.err.println("Error removing cart item: " + e.getMessage());
@@ -90,10 +103,9 @@ public class CartController {
         }
     }
 
-
-    /*Delete /api/cart/{cartId}*/
+    /*Delete /api/cart/{cartId} - Clear entire cart*/
     @DeleteMapping("/{cartId}")
-    public ResponseEntity <?> clearCart (@PathVariable Long cartId){
+    public ResponseEntity<?> clearCart(@PathVariable Long cartId){
         try{
             cartService.clearCart(cartId);
             return ResponseEntity.ok(Map.of("message", "Cart cleared"));
