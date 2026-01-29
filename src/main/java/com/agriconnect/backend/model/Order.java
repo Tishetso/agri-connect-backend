@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -81,15 +82,174 @@ public class Order {
         this.totalPrice = totalPrice;
         this.status = "Pending";
         this.paymentStatus = paymentMethod.equals("cash") ? "pending" : "pending";
-        this.deliveryFee = 10.0;
+        this.deliveryFee = 10.0;            //subjected to change by km to be travelled
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
+    //Helper methods
+    public void addItem(OrderItem item){
+        items.add(item);
+        item.setOrder(this);
+    }
 
+    public Double getGrandTotal(){
+        return totalPrice + deliveryFee;
+    }
 
+    //Getters and setters
 
+    public Long getId() {
+        return id;
+    }
 
+    public void setId(Long id){
+        this.id = id;
+    }
 
+    public User getConsumer(){
+        return consumer;
+    }
 
+    public void setConsumer(User consumer){
+        this.consumer = consumer;
+    }
+
+    public User getFarmer(){
+        return farmer;
+    }
+
+    public void setFarmer(User farmer){
+        this.farmer = farmer;
+    }
+
+    public List<OrderItem> getItems(){
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items){
+        this.items = items;
+    }
+
+    public String getDeliveryAddress(){
+        return deliveryAddress;
+    }
+
+    public void setDeliveryAddress(String deliveryAddress){
+        this.deliveryAddress = deliveryAddress;
+    }
+
+    public String getContactNumber(){
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber){
+        this.contactNumber = contactNumber;
+    }
+
+    public String getDeliveryNotes(){
+        return deliveryNotes;
+    }
+
+    public void setDeliveryNotes(String deliveryNotes){
+        this.deliveryNotes = deliveryNotes;
+    }
+
+    public String getPaymentMethod(){
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod){
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPaymentStatus(){
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus){
+        this.paymentStatus = paymentStatus;
+    }
+
+public String getPaymentReference(){
+        return paymentReference;
+}
+
+public void setPaymentReference(String paymentReference){
+        this.paymentReference = paymentReference;
+}
+
+public Double getTotalPrice(){
+        return totalPrice;
+}
+
+public void setTotalPrice(Double totalPrice){
+        this.totalPrice = totalPrice;
+}
+
+public Double getDeliveryFee(){
+        return deliveryFee;
+}
+
+public void setDeliveryFee(Double deliveryFee){
+        this.deliveryFee = deliveryFee;
+}
+
+public String getStatus(){
+        return status;
+}
+
+public void setStatus(String status){
+        this.status = status;
+}
+
+public String getCancellationReason(){
+        return cancellationReason;
+}
+
+public void setCancellationReason(String cancellationReason){
+        this.cancellationReason = cancellationReason;
+}
+
+public LocalDateTime getCreatedAt(){
+        return createdAt;
+}
+
+public void setCreatedAt(LocalDateTime createdAt){
+        this.createdAt = createdAt;
+}
+
+public LocalDateTime getUpdatedAt(){
+        return updatedAt;
+}
+
+public void setUpdatedAt(LocalDateTime updatedAt){
+        this.updatedAt = updatedAt;
+}
+
+public LocalDateTime getConfirmedAt(){
+        return confirmedAt;
+}
+
+public void setConfirmedAt(LocalDateTime confirmedAt){
+        this.confirmedAt = confirmedAt;
+}
+
+public LocalDateTime getDeliveredAt(){
+        return deliveredAt;
+}
+
+public void setDeliveredAt(LocalDateTime deliveredAt){
+        this.deliveredAt = deliveredAt;
+}
+
+@PrePersist
+    protected void onCreate(){
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+}
+@PreUpdate
+    protected void onUpdate(){
+        updatedAt = LocalDateTime.now();
+}
 }
