@@ -28,7 +28,7 @@ public class NotificationService {
 
     /*Notify consumer that order was placed*/
 
-    public void notifyConsumerOrderPlace(Order order){
+    public void notifyConsumerOrderPlaced(Order order){
         String consumerEmail = order.getConsumer().getEmail();
         String farmerName = order.getFarmer().getName() + " " + order.getFarmer().getSurname();
 
