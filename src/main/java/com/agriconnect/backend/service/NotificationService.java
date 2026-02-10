@@ -64,6 +64,7 @@ public class NotificationService{
     }
 
     /*Notify Consumer that order was placed*/
+
     public void notifyConsumerOrderPlaced(Order order){
         String consumerEmail = order.getConsumer().getEmail();
         String farmerName = order.getFarmer().getName() + " " + order.getFarmer().getSurname();
@@ -85,7 +86,28 @@ public class NotificationService{
         body.append("<p><strong>Status:</strong> <span style='color: #f39c12;'>").append(order.getStatus()).append("</span></p>");
         body.append("<p><strong>Total:</strong> R").append(String.format("%.2f", order.getGrandTotal())).append("</p>");
 
+        /*"Rule yourself relentlessly - first rule(discipline)"*/
 
+        body.append("<h4>Items:</h4><ul>");
+        order.getItems().forEach(item -> {
+            body.append("<li>").append(item.getProductName())
+                    .append(" × ").append(item.getQuantity())
+                    .append("</li>");
+        });
+        body.append("</ul>");
+        body.append("</div>");
+
+        body.append("<p>The farmer will review your order shortly. You'll receive another email once the confirm.</p>");
+        body.append("<a href='http://localhost:3000/consumer/orders' style='display: inline-block; padding: 12 px 30 px: background-color: #3498db; color:white; text-decoration: none; border-radius: 5px; margin-top: 10px;'> Track Order</a>");
+
+        sendEmail(consumerEmail,subject, body.toString());
+        sendSMS(order.getConsumer().getPhone(), "Order #" + order.getId() + " placed successfully! Farmer: " + farmerName);
+
+    }
+
+    /*Notify Consumer that order was confirmed*/
+
+    public void notifyConsumerOrderConfirmed(Order order){
 
     }
 }
