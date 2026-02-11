@@ -32,6 +32,8 @@ public class ListingService {
         return repo.findById(id).orElse(null);
     }
 
+
+    @Transactional
     public void deleteListing(Long id){
         repo.deleteById(id);
     }
