@@ -10,6 +10,26 @@ public class ListingDTO {
     private List<String> imageUrls;
     private String status;
 
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    // ✅ ADD THESE FIELDS FOR DISTANCE CALCULATION
+    private Double latitude;   // Farm latitude
+    private Double longitude;  // Farm longitude
+
     public ListingDTO(Long id, String product, String quantity, Double price, List<String> imageUrls, String status){
         this.id = id;
         this.product = product;

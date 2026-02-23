@@ -30,6 +30,8 @@ public class Listing {
     @Column(nullable = false)
     private String status = "Available";
 
+
+
     //add relationship to user
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

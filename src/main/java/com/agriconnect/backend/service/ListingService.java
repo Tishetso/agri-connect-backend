@@ -51,6 +51,10 @@ public class ListingService {
             String farmerName = listing.getUser().getName() + " " + listing.getUser().getSurname();
             String location = listing.getUser().getRegion();
 
+            // ✅ ADD THESE LINES - Get coordinates from User
+            Double latitude = listing.getUser().getLatitude();
+            Double longitude = listing.getUser().getLongitude();
+
             return new MarketplaceDTO(
                     listing.getId(),
                     listing.getProduct(),
@@ -59,7 +63,9 @@ public class ListingService {
                     listing.getImageUrls(),
                     listing.getStatus(),
                     farmerName,
-                    location
+                    location,
+                    latitude,
+                    longitude
             );
 
         }).collect(Collectors.toList());

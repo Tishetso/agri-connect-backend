@@ -11,9 +11,11 @@ public class MarketplaceDTO {
     private String status;
     private String farmerName;
     private String location;
+    private Double latitude ;
+    private Double longitude ;
 
     public MarketplaceDTO(Long id, String product, String quantity, Double price,
-                          List<String> imageUrls, String status, String farmerName, String location){
+                          List<String> imageUrls, String status, String farmerName, String location, Double latitude, Double longitude){
         this.id = id;
         this.product = product;
         this.quantity = quantity;
@@ -22,8 +24,8 @@ public class MarketplaceDTO {
         this.status = status;
         this.farmerName = farmerName;
         this.location = location;
-
-
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public Long getId() {
@@ -90,6 +92,12 @@ public class MarketplaceDTO {
         this.location = location;
     }
 
+    // ✅ ADD THESE GETTERS AND SETTERS
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
 
 }
