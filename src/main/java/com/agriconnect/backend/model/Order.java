@@ -23,6 +23,11 @@ public class Order {
     @JoinColumn(name = "farmer_id", nullable = false)
     private User farmer;
 
+    //Add driver Relationship
+    @ManyToOne
+    @JoinColumn(name = "driver_id")
+    private Driver driver;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
@@ -53,6 +58,27 @@ public class Order {
     @Column(name = "status", nullable = false)
     private String status; //Pending / confirmed/ in-Transit,Delivered,/cancelled
 
+    //adding delivery status
+    // ✅ ADD DELIVERY STATUS
+    @Column(name = "delivery_status")
+    private String deliveryStatus; // PENDING/ASSIGNED/PICKED_UP/IN_TRANSIT/DELIVERED
+
+    // ✅ ADD PICKUP ADDRESS
+    @Column(name = "pickup_address", length = 500)
+    private String pickupAddress;
+
+    // ✅ ADD PICKUP TIME
+    @Column(name = "pickup_time")
+    private LocalDateTime pickupTime;
+
+    // ✅ ADD DELIVERY TIME (different from deliveredAt)
+    @Column(name = "delivery_time")
+    private LocalDateTime deliveryTime;
+
+    // ✅ ADD DRIVER NOTES
+    @Column(name = "driver_notes", length = 1000)
+    private String driverNotes;
+
     @Column(name = "cancellation_reason")
     private String cancellationReason;
 
@@ -81,6 +107,7 @@ public class Order {
         this.paymentMethod = paymentMethod;
         this.totalPrice = totalPrice;
         this.status = "Pending";
+        this.deliveryStatus = "Pending";
         this.paymentStatus = paymentMethod.equals("cash") ? "pending" : "pending";
         this.deliveryFee = 10.0;            //subjected to change by km to be travelled
         this.createdAt = LocalDateTime.now();
@@ -98,6 +125,65 @@ public class Order {
     }
 
     //Getters and setters
+
+    //Driver related getters and setters
+    public Driver getDriver() {
+        return driver;
+    }
+
+    public void setDriver(Driver driver) {
+        this.driver = driver;
+    }
+
+    public Long getDriverId(){
+        return driver != null ? driver.getId() : null;
+    }
+
+    public void setDriverId(Long driverId){
+        // This is handled through setDriver() relationship
+        // But we keep this method for compatibility
+    }
+
+    public String getDeliveryStatus(){
+        return deliveryStatus;
+    }
+
+    public void setDeliveryStatus(String deliveryStatus){
+        this.deliveryStatus = deliveryStatus;
+    }
+
+    public String getPickupAddress() {
+        return pickupAddress;
+    }
+
+    public void setPickupAddress(String pickupAddress) {
+        this.pickupAddress = pickupAddress;
+    }
+
+    public LocalDateTime getPickupTime() {
+        return pickupTime;
+    }
+
+    public void setPickupTime(LocalDateTime pickupTime) {
+        this.pickupTime = pickupTime;
+    }
+
+    public LocalDateTime getDeliveryTime() {
+        return deliveryTime;
+    }
+
+    public void setDeliveryTime(LocalDateTime deliveryTime) {
+        this.deliveryTime = deliveryTime;
+    }
+
+    public String getDriverNotes() {
+        return driverNotes;
+    }
+
+    public void setDriverNotes(String driverNotes) {
+        this.driverNotes = driverNotes;
+    }
+
 
     public Long getId() {
         return id;

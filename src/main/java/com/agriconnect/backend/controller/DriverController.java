@@ -3,6 +3,7 @@ package com.agriconnect.backend.controller;
 
 import com.agriconnect.backend.model.Driver;
 import com.agriconnect.backend.model.Order;
+import com.agriconnect.backend.service.DriverService;
 import com.agriconnect.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,12 @@ public class DriverController {
         try {
             String email = jwtUtil.extractEmail(token.substring(7));
             Driver registered = driverService.registerDriver(email, driver);
-            return ResponseEntity.ok(registered);
+
+            //Return proper success response
+            return ResponseEntity.ok(Map.of(
+                    "message", "Registration submitted successfully",
+                    "driver", registered
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
@@ -41,7 +47,7 @@ public class DriverController {
     public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String token) {
         try {
             String email = jwtUtil.extractEmail(token.substring(7));
-            Driver driver = driverService.getDriverEmail(email);
+            Driver driver = driverService.getDriverByEmail(email);
             return ResponseEntity.ok(driver);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -79,7 +85,7 @@ public class DriverController {
     }
 
     //Accept delivery order
-    @PostMapping("/accept/{orderId")
+    @PostMapping("/accept/{orderId}")
     public ResponseEntity<?> acceptOrder(
             @PathVariable Long orderId,
             @RequestHeader("Authorization") String token) {
@@ -108,7 +114,7 @@ public class DriverController {
     }
 
     //Update delivery status
-    @PutMapping("/update-status/{orderId")
+    @PutMapping("/update-status/{orderId}")
     public ResponseEntity<?> updateDeliveryStatus(
             @PathVariable Long orderId,
             @RequestHeader("Authorization") String token,

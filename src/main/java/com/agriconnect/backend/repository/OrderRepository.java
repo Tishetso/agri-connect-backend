@@ -31,7 +31,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.farmer.email = :email AND o.status = 'Pending' ORDER BY o.createdAt DESC")
     List<Order> findPendingOrdersByFarmerEmail(@Param("email") String email);
 
+    // ✅ ADD DRIVER-RELATED QUERIES
 
+    // Find orders by delivery status with no driver assigned
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.deliveryStatus = :status AND o.driver IS NULL ORDER BY o.createdAt ASC")
+    List<Order> findByDeliveryStatusAndDriverIdIsNull(@Param("status") String status);
 
+    // Find orders by driver ID
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.driver.id = :driverId ORDER BY o.createdAt DESC")
+    List<Order> findByDriverId(@Param("driverId") Long driverId);
 
+    // Find orders by driver ID and delivery status
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.driver.id = :driverId AND o.deliveryStatus = :status ORDER BY o.createdAt DESC")
+    List<Order> findByDriverIdAndDeliveryStatus(@Param("driverId") Long driverId, @Param("status") String status);
 }

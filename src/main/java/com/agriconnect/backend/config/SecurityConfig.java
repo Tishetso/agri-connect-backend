@@ -38,12 +38,16 @@ public class SecurityConfig {
 
                                 // Public endpoints - no authentication required
                                 .requestMatchers("/api/login", "/api/register").permitAll()
+                                .requestMatchers("/api/driver/register").permitAll() //Allow public driver registration
                                 .requestMatchers("/uploads/**").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
 
                         //Marketplace browsing - public access ( anyone can browse)
                                 .requestMatchers(HttpMethod.GET, "/api/marketplace").permitAll()
+
+                        //Driver
+                        .requestMatchers("/api/driver/**").authenticated()
 
                         //Guest checkout to be implemented
 

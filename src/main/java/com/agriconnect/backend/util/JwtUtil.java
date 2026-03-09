@@ -7,35 +7,26 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
 
 @Component
 public class JwtUtil {
 
-    // Use a secure key (at least 256-bit for HS256)
-    private static final String SECRET_KEY = "your_super_secret_key_which_is_at_least_32_chars_long";
-
-    private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-
-    private static final long JWT_TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
+    private static final long JWT_TOKEN_VALIDITY = 24 * 60 * 60 * 1000; // 24 hours
+    private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     public String generateToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
-               //spring security expects authorities with "ROLE_" prefix
+                // Spring security expects authorities with "ROLE_" prefix
                 .claim("authorities", List.of("ROLE_" + user.getRole().toUpperCase()))
-                /*.claim("role", user.getRole())*/
-
-
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY)) // 24hr
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-
-
 
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
@@ -45,22 +36,45 @@ public class JwtUtil {
                 .getBody();
     }
 
-    public boolean isTokenValid(String token, User user){
-        final String email = extractClaims(token).getSubject();
-        return (email.equals(user.getEmail()) && !isTokenExpired(token));
-
+    // ✅ ADD THIS METHOD - Extract email from token
+    public String extractEmail(String token) {
+        return extractClaims(token).getSubject();
     }
 
-    private boolean isTokenExpired(String token){
+    // ✅ OPTIONAL: Add extractRole method for convenience
+    public String extractRole(String token) {
+        String role = extractClaims(token).get("role", String.class);
+        if (role != null && role.startsWith("ROLE_")) {
+            return role;
+        }
+        // Fallback
+        return "ROLE_" + (role != null ? role.toUpperCase() : "USER");
+    }
+
+    public boolean isTokenValid(String token, User user) {
+        final String email = extractClaims(token).getSubject();
+        return (email.equals(user.getEmail()) && !isTokenExpired(token));
+    }
+
+    private boolean isTokenExpired(String token) {
         return extractClaims(token).getExpiration().before(new Date());
     }
 
-    public String getRoleFromToken(String token){
+    public String getRoleFromToken(String token) {
         String role = extractClaims(token).get("role", String.class);
-        if (role != null && role.startsWith("ROLE_")){
+        if (role != null && role.startsWith("ROLE_")) {
             return role;
         }
-        //fallback
+        // Fallback
         return "ROLE_" + role.toUpperCase();
+    }
+
+    // ✅ OPTIONAL: Validate token without user object
+    public boolean isTokenValid(String token) {
+        try {
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
