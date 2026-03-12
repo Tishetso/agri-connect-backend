@@ -11,6 +11,33 @@ public class Driver {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //User fields embedded directly
+    @Column(name = "name")
+    private String name;
+
+    @Column( name = "surname")
+    private String surname;
+
+    @Column(name = "email", unique = true)
+    private String email;
+
+    @Column(name = "id_number", unique = true)
+    private String idNumber;
+
+    @Column(name = "password")
+    private String password;
+
+    //Coordinates embedded
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "adress")
+    private String address;
+
+
     @OneToOne
     @JoinColumn(name = "user_id", unique = true)
     private User user;
@@ -43,6 +70,88 @@ public class Driver {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // Getters and Setters
+
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getIdNumber() {
+        return idNumber;
+    }
+
+    public void setIdNumber(String idNumber) {
+        this.idNumber = idNumber;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Boolean getVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(Boolean verified) {
+        isVerified = verified;
+    }
+
+    public Boolean getAvailable() {
+        return isAvailable;
+    }
+
+    public void setAvailable(Boolean available) {
+        isAvailable = available;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

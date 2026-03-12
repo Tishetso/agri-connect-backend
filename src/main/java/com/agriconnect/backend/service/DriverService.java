@@ -1,5 +1,6 @@
 package com.agriconnect.backend.service;
 
+import com.agriconnect.backend.dto.DriverRegistrationRequest;
 import com.agriconnect.backend.model.Driver;
 import com.agriconnect.backend.model.Order;
 import com.agriconnect.backend.model.User;
@@ -7,6 +8,8 @@ import com.agriconnect.backend.repository.DriverRepository;
 import com.agriconnect.backend.repository.OrderRepository;
 import com.agriconnect.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,38 +28,50 @@ public class DriverService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public Driver registerDriver(String email, Driver driverData){
-        try {
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
-            // Check if already registered as driver
-            if (driverRepository.findByUser(user).isPresent()) {
-                throw new RuntimeException("Already registered as driver");
+
+    public Driver registerDriver(DriverRegistrationRequest request) {
+        try {
+            // Check for duplicate email or ID number
+            if (driverRepository.existsByEmail(request.getEmail())) {
+                throw new RuntimeException("A driver with this email already exists");
+            }
+            if (driverRepository.existsByIdNumber(request.getIdNumber())) {
+                throw new RuntimeException("A driver with this ID number already exists");
             }
 
             Driver driver = new Driver();
-            driver.setUser(user);
-            driver.setVehicleType(driverData.getVehicleType());
-            driver.setPhoneNumber(driverData.getPhoneNumber());
+            driver.setName(request.getName());
+            driver.setSurname(request.getSurname());
+            driver.setIdNumber(request.getIdNumber());
+            driver.setEmail(request.getEmail());
+            driver.setPhoneNumber(request.getPhoneNumber());
+            driver.setAddress(request.getAddress());
+            driver.setLatitude(request.getLatitude());
+            driver.setLongitude(request.getLongitude());
+            driver.setVehicleType(request.getVehicleType());
 
-            // ✅ Conditional fields based on vehicle type
-            if ("bicycle".equalsIgnoreCase(driverData.getVehicleType())) {
-                // Bicycles don't need license or registration
+            // Conditional fields based on vehicle type
+            if ("bicycle".equalsIgnoreCase(request.getVehicleType())) {
                 driver.setLicenseNumber("N/A");
                 driver.setVehicleRegistration("BICYCLE");
             } else {
-                // Motorized vehicles need these
-                driver.setLicenseNumber(driverData.getLicenseNumber());
-                driver.setVehicleRegistration(driverData.getVehicleRegistration());
+                driver.setLicenseNumber(request.getLicenseNumber());
+                driver.setVehicleRegistration(request.getVehicleRegistration());
             }
 
             driver.setIsVerified(false);
             driver.setIsAvailable(false);
+            driver.setRating(0.0);
+            driver.setTotalDeliveries(0);
+            driver.setCreatedAt(LocalDateTime.now());
+            driver.setPassword(passwordEncoder.encode(request.getPassword()));
 
             return driverRepository.save(driver);
+
         } catch (Exception e) {
-            // ✅ Re-throw with clear message
             throw new RuntimeException("Failed to register driver: " + e.getMessage());
         }
     }

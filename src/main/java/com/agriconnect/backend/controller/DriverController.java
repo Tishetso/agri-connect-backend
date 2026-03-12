@@ -1,6 +1,7 @@
 package com.agriconnect.backend.controller;
 
 
+import com.agriconnect.backend.dto.DriverRegistrationRequest;
 import com.agriconnect.backend.model.Driver;
 import com.agriconnect.backend.model.Order;
 import com.agriconnect.backend.service.DriverService;
@@ -23,23 +24,17 @@ public class DriverController {
 
     //Register as driver
     @PostMapping("/register")
-    public ResponseEntity<?> registerDriver(
-            @RequestBody Driver driver,
-            @RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> registerDriver(@RequestBody DriverRegistrationRequest request) {
         try {
-            String email = jwtUtil.extractEmail(token.substring(7));
-            Driver registered = driverService.registerDriver(email, driver);
-
-            //Return proper success response
+            Driver registered = driverService.registerDriver(request);
             return ResponseEntity.ok(Map.of(
                     "message", "Registration submitted successfully",
-                    "driver", registered
+                    "driverId", registered.getId()
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
         }
-
     }
 
     //Get driver profile
