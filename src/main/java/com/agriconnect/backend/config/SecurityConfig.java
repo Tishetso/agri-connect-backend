@@ -38,6 +38,7 @@ public class SecurityConfig {
 
                                 // Public endpoints - no authentication required
                                 .requestMatchers("/api/login", "/api/register").permitAll()
+                        .requestMatchers("/api/driver/login").permitAll()
                                 .requestMatchers("/api/driver/register").permitAll() //Allow public driver registration
                                 .requestMatchers("/uploads/**").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

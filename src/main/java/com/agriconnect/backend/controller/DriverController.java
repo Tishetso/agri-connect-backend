@@ -1,6 +1,7 @@
 package com.agriconnect.backend.controller;
 
 
+import com.agriconnect.backend.dto.DriverLoginRequest;
 import com.agriconnect.backend.dto.DriverRegistrationRequest;
 import com.agriconnect.backend.model.Driver;
 import com.agriconnect.backend.model.Order;
@@ -33,6 +34,18 @@ public class DriverController {
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Driver login
+    @PostMapping("/login")
+    public ResponseEntity<?> loginDriver(@RequestBody DriverLoginRequest request) {
+        try {
+            Map<String, Object> response = driverService.loginDriver(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(403)
                     .body(Map.of("error", e.getMessage()));
         }
     }

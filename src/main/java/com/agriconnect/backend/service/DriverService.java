@@ -1,15 +1,14 @@
 package com.agriconnect.backend.service;
 
+import com.agriconnect.backend.dto.DriverLoginRequest;
 import com.agriconnect.backend.dto.DriverRegistrationRequest;
 import com.agriconnect.backend.model.Driver;
 import com.agriconnect.backend.model.Order;
-import com.agriconnect.backend.model.User;
 import com.agriconnect.backend.repository.DriverRepository;
 import com.agriconnect.backend.repository.OrderRepository;
-import com.agriconnect.backend.repository.UserRepository;
+import com.agriconnect.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,82 +22,95 @@ public class DriverService {
     private DriverRepository driverRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    public Map<String, Object> loginDriver(DriverLoginRequest request) {
+        Driver driver = driverRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("No account found with that email"));
+
+        if (!passwordEncoder.matches(request.getPassword(), driver.getPassword())) {
+            throw new RuntimeException("Incorrect password");
+        }
+
+        if (!Boolean.TRUE.equals(driver.getIsVerified())) {
+            throw new RuntimeException("Your account is pending admin verification");
+        }
+
+        String token = jwtUtil.generateToken(driver.getEmail(), "DRIVER");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("id", driver.getId());
+        response.put("name", driver.getName());
+        response.put("email", driver.getEmail());
+        response.put("vehicleType", driver.getVehicleType());
+        response.put("isAvailable", driver.getIsAvailable());
+        return response;
+    }
 
     public Driver registerDriver(DriverRegistrationRequest request) {
-        try {
-            // Check for duplicate email or ID number
-            if (driverRepository.existsByEmail(request.getEmail())) {
-                throw new RuntimeException("A driver with this email already exists");
-            }
-            if (driverRepository.existsByIdNumber(request.getIdNumber())) {
-                throw new RuntimeException("A driver with this ID number already exists");
-            }
-
-            Driver driver = new Driver();
-            driver.setName(request.getName());
-            driver.setSurname(request.getSurname());
-            driver.setIdNumber(request.getIdNumber());
-            driver.setEmail(request.getEmail());
-            driver.setPhoneNumber(request.getPhoneNumber());
-            driver.setAddress(request.getAddress());
-            driver.setLatitude(request.getLatitude());
-            driver.setLongitude(request.getLongitude());
-            driver.setVehicleType(request.getVehicleType());
-
-            // Conditional fields based on vehicle type
-            if ("bicycle".equalsIgnoreCase(request.getVehicleType())) {
-                driver.setLicenseNumber("N/A");
-                driver.setVehicleRegistration("BICYCLE");
-            } else {
-                driver.setLicenseNumber(request.getLicenseNumber());
-                driver.setVehicleRegistration(request.getVehicleRegistration());
-            }
-
-            driver.setIsVerified(false);
-            driver.setIsAvailable(false);
-            driver.setRating(0.0);
-            driver.setTotalDeliveries(0);
-            driver.setCreatedAt(LocalDateTime.now());
-            driver.setPassword(passwordEncoder.encode(request.getPassword()));
-
-            return driverRepository.save(driver);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to register driver: " + e.getMessage());
+        if (driverRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("A driver with this email already exists");
         }
+        if (driverRepository.existsByIdNumber(request.getIdNumber())) {
+            throw new RuntimeException("A driver with this ID number already exists");
+        }
+
+        Driver driver = new Driver();
+        driver.setName(request.getName());
+        driver.setSurname(request.getSurname());
+        driver.setIdNumber(request.getIdNumber());
+        driver.setEmail(request.getEmail());
+        driver.setPhoneNumber(request.getPhoneNumber());
+        driver.setAddress(request.getAddress());
+        driver.setLatitude(request.getLatitude());
+        driver.setLongitude(request.getLongitude());
+        driver.setVehicleType(request.getVehicleType());
+
+        if ("bicycle".equalsIgnoreCase(request.getVehicleType())) {
+            driver.setLicenseNumber("N/A");
+            driver.setVehicleRegistration("BICYCLE");
+        } else {
+            driver.setLicenseNumber(request.getLicenseNumber());
+            driver.setVehicleRegistration(request.getVehicleRegistration());
+        }
+
+        driver.setIsVerified(false);
+        driver.setIsAvailable(false);
+        driver.setRating(0.0);
+        driver.setTotalDeliveries(0);
+        driver.setCreatedAt(LocalDateTime.now());
+        driver.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        return driverRepository.save(driver);
     }
 
-    public Driver getDriverByEmail(String email){
-        User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return driverRepository.findByUser(user)
-        .orElseThrow(() -> new RuntimeException("Driver profile not found"));
+    // ✅ Fixed: query Driver directly by email instead of going through User
+    public Driver getDriverByEmail(String email) {
+        return driverRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Driver not found"));
     }
 
-    public Driver updateAvailability(String email, Boolean available){
+    public Driver updateAvailability(String email, Boolean available) {
         Driver driver = getDriverByEmail(email);
         driver.setIsAvailable(available);
         return driverRepository.save(driver);
     }
 
-    public List<Order> getAvailableOrders(){
-        //Get orders that are pid but not assigned to driver
+    public List<Order> getAvailableOrders() {
         return orderRepository.findByDeliveryStatusAndDriverIdIsNull("PENDING");
     }
 
-    public Order acceptOrder(String email, long orderId){
+    public Order acceptOrder(String email, long orderId) {
         Driver driver = getDriverByEmail(email);
 
-        if(!driver.getIsAvailable()){
+        if (!driver.getIsAvailable()) {
             throw new RuntimeException("You must be available to accept orders");
         }
 
@@ -115,29 +127,27 @@ public class DriverService {
         return orderRepository.save(order);
     }
 
-    public List<Order> getDriverDeliveries(String email){
+    public List<Order> getDriverDeliveries(String email) {
         Driver driver = getDriverByEmail(email);
         return orderRepository.findByDriverId(driver.getId());
     }
 
-    public Order updateDeliveryStatus(String email, Long orderId, String status){
+    public Order updateDeliveryStatus(String email, Long orderId, String status) {
         Driver driver = getDriverByEmail(email);
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order no found"));
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if(!order.getDriverId().equals(driver.getId())){
+        if (!order.getDriverId().equals(driver.getId())) {
             throw new RuntimeException("This order is not assigned to you");
         }
 
         order.setDeliveryStatus(status);
 
-        if(status.equals("PICKED_UP")){
+        if (status.equals("PICKED_UP")) {
             order.setPickupTime(LocalDateTime.now());
-        }else if(status.equals("DELIVERED")){
+        } else if (status.equals("DELIVERED")) {
             order.setDeliveryTime(LocalDateTime.now());
-
-            //update driver stats
             driver.setTotalDeliveries(driver.getTotalDeliveries() + 1);
             driverRepository.save(driver);
         }
@@ -145,12 +155,9 @@ public class DriverService {
         return orderRepository.save(order);
     }
 
-
-
-    public Map<String, Object> getEarnings(String email){
+    public Map<String, Object> getEarnings(String email) {
         Driver driver = getDriverByEmail(email);
 
-        //get all delivered orders for this driver
         List<Order> deliveredOrders = orderRepository
                 .findByDriverIdAndDeliveryStatus(driver.getId(), "DELIVERED");
 
@@ -158,7 +165,7 @@ public class DriverService {
                 .mapToDouble(Order::getDeliveryFee)
                 .sum();
 
-        Map<String,Object> earnings = new HashMap<>();
+        Map<String, Object> earnings = new HashMap<>();
         earnings.put("totalEarnings", totalEarnings);
         earnings.put("totalDeliveries", driver.getTotalDeliveries());
         earnings.put("rating", driver.getRating());
@@ -166,5 +173,4 @@ public class DriverService {
 
         return earnings;
     }
-
 }

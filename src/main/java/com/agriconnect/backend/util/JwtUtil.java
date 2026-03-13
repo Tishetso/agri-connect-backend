@@ -28,6 +28,18 @@ public class JwtUtil {
                 .compact();
     }
 
+    // ✅ New overload — used for Drivers (no User object needed)
+    public String generateToken(String email, String role) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("authorities", List.of("ROLE_" + role.toUpperCase()))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
