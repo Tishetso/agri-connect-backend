@@ -38,9 +38,9 @@ public class DriverService {
             throw new RuntimeException("Incorrect password");
         }
 
-        if (!Boolean.TRUE.equals(driver.getIsVerified())) {
+       /* if (!Boolean.TRUE.equals(driver.getIsVerified())) {
             throw new RuntimeException("Your account is pending admin verification");
-        }
+        }*/
 
         String token = jwtUtil.generateToken(driver.getEmail(), "DRIVER");
 
