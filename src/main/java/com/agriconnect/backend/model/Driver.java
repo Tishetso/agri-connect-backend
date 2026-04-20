@@ -1,5 +1,6 @@
 package com.agriconnect.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -34,12 +35,13 @@ public class Driver {
     @Column(name = "longitude")
     private Double longitude;
 
-    @Column(name = "adress")
+    @Column(name = "address")
     private String address;
 
 
     @OneToOne
     @JoinColumn(name = "user_id", unique = true)
+    @JsonIgnore
     private User user;
 
     @Column(name = "vehicle_type")

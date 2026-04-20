@@ -25,7 +25,7 @@ public class SecurityConfig {
     private List<String> allowedOrigins;
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
 

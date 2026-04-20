@@ -1,5 +1,6 @@
 package com.agriconnect.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -17,15 +18,18 @@ public class Order {
 
     @ManyToOne
     @JoinColumn( name = "consumer_id", nullable = false)
+    @JsonIgnore
     private User consumer;
 
     @ManyToOne
     @JoinColumn(name = "farmer_id", nullable = false)
+    @JsonIgnore
     private User farmer;
 
     //Add driver Relationship
     @ManyToOne
     @JoinColumn(name = "driver_id")
+    @JsonIgnore
     private Driver driver;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,5 +1,6 @@
 package com.agriconnect.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 
@@ -13,10 +14,12 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
     private Order order;
 
     @ManyToOne
     @JoinColumn(name = "listing_id")
+    @JsonIgnore
     private Listing listing; //Reference to original listing
 
     //Snapshot Data - preserved even if listing changes
