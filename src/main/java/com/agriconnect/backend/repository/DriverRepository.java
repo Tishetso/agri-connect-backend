@@ -18,6 +18,7 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 
     @Query("SELECT d FROM Driver d WHERE d.isAvailable = true AND d.isVerified = true")
     List<Driver> findAvailableDrivers();
+    List<Driver> findByIsAvailableTrue();
 
 
 }

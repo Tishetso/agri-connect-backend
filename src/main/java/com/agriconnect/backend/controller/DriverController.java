@@ -5,6 +5,7 @@ import com.agriconnect.backend.dto.DriverLoginRequest;
 import com.agriconnect.backend.dto.DriverRegistrationRequest;
 import com.agriconnect.backend.model.Driver;
 import com.agriconnect.backend.model.Order;
+import com.agriconnect.backend.repository.DriverRepository;
 import com.agriconnect.backend.service.DriverService;
 import com.agriconnect.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ public class DriverController {
 
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private DriverRepository driverRepository;
 
     //Register as driver
     @PostMapping("/register")
@@ -149,6 +152,17 @@ public class DriverController {
         }catch(Exception e){
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /*Getting all drivers  List<Driver> findByIsAvailableTrue();*/
+    @GetMapping("/available-drivers")
+    public ResponseEntity<?> getAvailableDrivers(@RequestHeader("Authorization") String token) {
+        try {
+            List<Driver> drivers = driverRepository.findByIsAvailableTrue();
+            return ResponseEntity.ok(drivers);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
