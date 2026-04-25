@@ -214,7 +214,7 @@ public class OrderService {
                 ))
                 .collect(Collectors.toList());
 
-        return new OrderDTO(
+        OrderDTO dto = new OrderDTO(
                 order.getId(),
                 farmerName,
                 order.getFarmer().getRegion(),
@@ -237,7 +237,11 @@ public class OrderService {
                 order.getDeliveredAt()
         );
 
+        // ← add these two
+        dto.setDriverId(order.getDriverId());
+        dto.setDeliveryStatus(order.getDeliveryStatus());
 
+        return dto;
     }
 
 

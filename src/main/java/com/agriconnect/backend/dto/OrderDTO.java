@@ -24,6 +24,8 @@ public class OrderDTO {
     private LocalDateTime createdAt;
     private LocalDateTime confirmedAt;
     private LocalDateTime deliveredAt;
+    private Long driverId;
+    private String deliveryStatus;
 
     //Constructor
     public OrderDTO(){}
@@ -56,6 +58,22 @@ public class OrderDTO {
 
 
 
+    }
+
+    public Long getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(Long driverId) {
+        this.driverId = driverId;
+    }
+
+    public String getDeliveryStatus() {
+        return deliveryStatus;
+    }
+
+    public void setDeliveryStatus(String deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
     }
 
     public Long getId() {

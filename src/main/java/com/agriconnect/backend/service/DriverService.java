@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -104,6 +105,7 @@ public class DriverService {
         return driverRepository.save(driver);
     }
 
+    @Transactional
     public List<Order> getAvailableOrders() {
         return orderRepository.findByDeliveryStatusAndDriverIdIsNull("PENDING");
     }
@@ -128,11 +130,13 @@ public class DriverService {
         return orderRepository.save(order);
     }
 
+    @Transactional
     public List<Order> getDriverDeliveries(String email) {
         Driver driver = getDriverByEmail(email);
         return orderRepository.findByDriverId(driver.getId());
     }
 
+    @Transactional
     public Order updateDeliveryStatus(String email, Long orderId, String status) {
         Driver driver = getDriverByEmail(email);
 
@@ -149,6 +153,7 @@ public class DriverService {
             order.setPickupTime(LocalDateTime.now());
         } else if (status.equals("DELIVERED")) {
             order.setDeliveryTime(LocalDateTime.now());
+            order.setStatus("Delivered");
             driver.setTotalDeliveries(driver.getTotalDeliveries() + 1);
             driverRepository.save(driver);
         }

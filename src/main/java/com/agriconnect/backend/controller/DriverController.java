@@ -6,6 +6,7 @@ import com.agriconnect.backend.dto.DriverRegistrationRequest;
 import com.agriconnect.backend.model.Driver;
 import com.agriconnect.backend.model.Order;
 import com.agriconnect.backend.repository.DriverRepository;
+import com.agriconnect.backend.repository.OrderRepository;
 import com.agriconnect.backend.service.DriverService;
 import com.agriconnect.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ public class DriverController {
     private JwtUtil jwtUtil;
     @Autowired
     private DriverRepository driverRepository;
+    @Autowired
+    private OrderRepository orderRepository;
 
     //Register as driver
     @PostMapping("/register")
@@ -48,7 +51,7 @@ public class DriverController {
             Map<String, Object> response = driverService.loginDriver(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(403)
+            return ResponseEntity.badRequest() /*changed 403 to badRequest() 400*/
                     .body(Map.of("error", e.getMessage()));
         }
     }
@@ -133,8 +136,13 @@ public class DriverController {
         try{
             String email = jwtUtil.extractEmail(token.substring(7));
             String status = request.get("status");
-            Order order = driverService.updateDeliveryStatus(email, orderId, status);
-            return ResponseEntity.ok(order);
+            driverService.updateDeliveryStatus(email, orderId, status);
+            /*Order order = driverService.updateDeliveryStatus(email, orderId, status);*/
+            return ResponseEntity.ok(Map.of(
+                    "message", "Status updated",
+                    "orderId", orderId,
+                    "deliveryStatus", status
+            ));
         }catch(Exception e){
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
@@ -166,4 +174,78 @@ public class DriverController {
         }
     }
 
+
+    @PostMapping("/assign/{orderId}")
+    public ResponseEntity<?> assignDriverToOrder(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String token,
+            @RequestBody Map<String, Long> request) {
+        try {
+            Long driverId = request.get("driverId");
+
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+
+            Driver driver = driverRepository.findById(driverId)
+                    .orElseThrow(() -> new RuntimeException("Driver not found"));
+
+            order.setDriver(driver);
+            order.setDeliveryStatus("ASSIGNED");
+            orderRepository.save(order);
+
+            return ResponseEntity.ok(Map.of("message", "Driver assigned successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    //Order-driver assignment
+    @PostMapping("/accept-assignment/{orderId}")
+    public ResponseEntity<?> acceptAssignment(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String token) {
+        try {
+            String email = jwtUtil.extractEmail(token.substring(7));
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+
+            order.setDeliveryStatus("ACCEPTED");
+            orderRepository.save(order);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Order accepted",
+                    "orderId", orderId,
+                    "deliveryStatus", "ACCEPTED"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reject/{orderId}")
+    public ResponseEntity<?> rejectAssignment(
+            @PathVariable Long orderId,
+            @RequestHeader("Authorization") String token) {
+        try{
+            String email = jwtUtil.extractEmail(token.substring(7));
+            Driver driver = driverService.getDriverByEmail(email);
+
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+
+            if (!driver.getId().equals(order.getDriverId())){
+                throw new RuntimeException("This order is not assigned to you");
+            }
+
+            order.setDriver(null);
+            order.setDeliveryStatus("PENDING");
+            order.setStatus("Pending");
+            orderRepository.save(order);
+
+            return ResponseEntity.ok(Map.of("message", "Order rejected"));
+        }catch(Exception e){
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
