@@ -49,6 +49,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
 
+        //BLOCKS admin self registration
+        if("ADMIN".equalsIgnoreCase(userDto.getRole())){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Admin accounts cannot be self-registered"));
+        }
+
         // Check if email already exists
         Optional<User> existingUser = userRepository.findByEmail(userDto.getEmail());
         if (existingUser.isPresent()) {

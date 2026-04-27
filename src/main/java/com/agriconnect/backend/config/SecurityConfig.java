@@ -47,7 +47,7 @@ public class SecurityConfig {
                         //Marketplace browsing - public access ( anyone can browse)
                                 .requestMatchers(HttpMethod.GET, "/api/marketplace").permitAll()
 
-                        // Driver specific routes — MUST be before the wildcard /api/driver/**
+                        // DRIVER specific routes — MUST be before the wildcard /api/driver/**
                         .requestMatchers("/api/driver/available-drivers").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/driver/assign/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/driver/accept-assignment/**").authenticated()
@@ -55,6 +55,9 @@ public class SecurityConfig {
 
                         // Driver wildcard catch-all
                         .requestMatchers("/api/driver/**").authenticated()
+
+                        //ADMIN
+                        .requestMatchers("/api/admin/**").authenticated()
 
                         //Guest checkout to be implemented
 
