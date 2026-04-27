@@ -40,9 +40,9 @@ public class DriverService {
             throw new RuntimeException("Incorrect password");
         }
 
-       /* if (!Boolean.TRUE.equals(driver.getIsVerified())) {
+        if (!Boolean.TRUE.equals(driver.getIsVerified())) {
             throw new RuntimeException("Your account is pending admin verification");
-        }*/
+        }
 
         String token = jwtUtil.generateToken(driver.getEmail(), "DRIVER");
 
@@ -53,6 +53,7 @@ public class DriverService {
         response.put("email", driver.getEmail());
         response.put("vehicleType", driver.getVehicleType());
         response.put("isAvailable", driver.getIsAvailable());
+        response.put("kycSubmitted", driver.getKycSubmitted() != null && driver.getKycSubmitted());
         return response;
     }
 

@@ -12,7 +12,11 @@ import com.agriconnect.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +72,51 @@ public class DriverController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    /*Added kyc 27 / April / 2026*/
+    @PostMapping("/kyc")
+    public ResponseEntity<?> submitKyc(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("idDocument") MultipartFile idDocument,
+            @RequestParam("selfie") MultipartFile selfie,
+            @RequestParam("vehiclePhoto") MultipartFile vehiclePhoto,
+            @RequestParam("licenseDisk") MultipartFile licenseDisk,
+            @RequestParam(value = "driversLicense", required = false) MultipartFile driversLicense){
+
+        try{
+            String email = jwtUtil.extractEmail(token.substring(7));
+            Driver driver = driverService.getDriverByEmail(email);
+
+            String uploadDir = "uploads/";
+
+            driver.setIdDocumentUrl(saveFile(idDocument, uploadDir));
+            driver.setSelfieUrl(saveFile(selfie, uploadDir));
+            driver.setVehiclePhotoUrl(saveFile(vehiclePhoto, uploadDir));
+            driver.setLicenseDiskUrl(saveFile(licenseDisk, uploadDir));
+
+            if (driversLicense != null && !driversLicense.isEmpty()){
+                driver.setDriversLicenseUrl(saveFile(driversLicense, uploadDir));
+            }
+
+            driver.setKycSubmitted(true);
+            driverRepository.save(driver);
+
+            return ResponseEntity.ok(Map.of("message", "KYC documents submitted successfully"));
+        }catch(Exception e){
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    private String saveFile(MultipartFile file, String uploadDir) throws Exception{
+        String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path path = Paths.get(uploadDir + filename);
+        Files.createDirectories(path.getParent());
+        Files.write(path, file.getBytes());
+        return filename;
+    }
+
+
+
 
     //Toggle Availability
     @PutMapping("/availability")

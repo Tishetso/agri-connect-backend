@@ -71,6 +71,73 @@ public class Driver {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    //additions for docs uploads
+    @Column(name = "id_document_url")
+    private String idDocumentUrl;
+
+    @Column(name = "selfie_url")
+    private String selfieUrl;
+
+    @Column(name = "vehicle_photo_url")
+    private String vehiclePhotoUrl;
+
+    @Column(name = "license_disk_url")
+    private String licenseDiskUrl;
+
+    @Column(name = "drivers_license_url")
+    private String driversLicenseUrl;
+
+    @Column(name = "kyc_submitted")
+    private Boolean kycSubmitted = false;
+
+    public String getIdDocumentUrl() {
+        return idDocumentUrl;
+    }
+
+    public void setIdDocumentUrl(String idDocumentUrl) {
+        this.idDocumentUrl = idDocumentUrl;
+    }
+
+    public String getSelfieUrl() {
+        return selfieUrl;
+    }
+
+    public void setSelfieUrl(String selfieUrl) {
+        this.selfieUrl = selfieUrl;
+    }
+
+    public String getVehiclePhotoUrl() {
+        return vehiclePhotoUrl;
+    }
+
+    public void setVehiclePhotoUrl(String vehiclePhotoUrl) {
+        this.vehiclePhotoUrl = vehiclePhotoUrl;
+    }
+
+    public String getLicenseDiskUrl() {
+        return licenseDiskUrl;
+    }
+
+    public void setLicenseDiskUrl(String licenseDiskUrl) {
+        this.licenseDiskUrl = licenseDiskUrl;
+    }
+
+    public String getDriversLicenseUrl() {
+        return driversLicenseUrl;
+    }
+
+    public void setDriversLicenseUrl(String driversLicenseUrl) {
+        this.driversLicenseUrl = driversLicenseUrl;
+    }
+
+    public Boolean getKycSubmitted() {
+        return kycSubmitted;
+    }
+
+    public void setKycSubmitted(Boolean kycSubmitted) {
+        this.kycSubmitted = kycSubmitted;
+    }
+
     // Getters and Setters
 
 
