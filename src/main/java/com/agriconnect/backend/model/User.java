@@ -2,6 +2,7 @@ package com.agriconnect.backend.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -10,11 +11,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private LocalDateTime createdAt;
+
     private String name;
     private String surname;
 
     @Column(unique = true)
     private String email;
+
+    @Column(nullable = false)
+    private String status = "ACTIVE";
 
     private String password;
     private String idNumber;
@@ -120,4 +126,21 @@ public class User {
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
 }

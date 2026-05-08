@@ -11,6 +11,7 @@ import com.agriconnect.backend.service.DriverService;
 import com.agriconnect.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -76,25 +77,31 @@ public class DriverController {
     /*Added kyc 27 / April / 2026*/
     @PostMapping("/kyc")
     public ResponseEntity<?> submitKyc(
-            @RequestHeader("Authorization") String token,
             @RequestParam("idDocument") MultipartFile idDocument,
             @RequestParam("selfie") MultipartFile selfie,
             @RequestParam("vehiclePhoto") MultipartFile vehiclePhoto,
-            @RequestParam("licenseDisk") MultipartFile licenseDisk,
-            @RequestParam(value = "driversLicense", required = false) MultipartFile driversLicense){
+            @RequestParam(value = "licenseDisk", required = false) MultipartFile licenseDisk,
+            @RequestParam(value = "driversLicense", required = false) MultipartFile driversLicense,
+            Authentication authentication) {   // ← Use this instead of token header
 
-        try{
-            String email = jwtUtil.extractEmail(token.substring(7));
+        try {
+            String email = authentication.getName();
             Driver driver = driverService.getDriverByEmail(email);
+
+            if (driver == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Driver not found"));
+            }
 
             String uploadDir = "uploads/";
 
             driver.setIdDocumentUrl(saveFile(idDocument, uploadDir));
             driver.setSelfieUrl(saveFile(selfie, uploadDir));
             driver.setVehiclePhotoUrl(saveFile(vehiclePhoto, uploadDir));
-            driver.setLicenseDiskUrl(saveFile(licenseDisk, uploadDir));
 
-            if (driversLicense != null && !driversLicense.isEmpty()){
+            if (licenseDisk != null && !licenseDisk.isEmpty()) {
+                driver.setLicenseDiskUrl(saveFile(licenseDisk, uploadDir));
+            }
+            if (driversLicense != null && !driversLicense.isEmpty()) {
                 driver.setDriversLicenseUrl(saveFile(driversLicense, uploadDir));
             }
 
@@ -102,7 +109,8 @@ public class DriverController {
             driverRepository.save(driver);
 
             return ResponseEntity.ok(Map.of("message", "KYC documents submitted successfully"));
-        }catch(Exception e){
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
