@@ -101,7 +101,13 @@ public class DriverService {
     }
 
     public Driver updateAvailability(String email, Boolean available) {
-        Driver driver = getDriverByEmail(email);
+        Driver driver = driverRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("driver not found"));
+
+        if (!Boolean.TRUE.equals(driver.getIsVerified()) &&
+        Boolean.TRUE.equals(available)){
+            throw new RuntimeException("Only verified drivers can go online");
+        }
         driver.setIsAvailable(available);
         return driverRepository.save(driver);
     }
