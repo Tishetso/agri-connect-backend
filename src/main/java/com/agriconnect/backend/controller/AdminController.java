@@ -31,7 +31,7 @@ public class AdminController {
             long totalUsers     = userRepository.count();
             long totalFarmers   = userRepository.countByRole("farmer");
             long totalConsumers = userRepository.countByRole("consumer");
-            long totalDrivers   = userRepository.countByRole("driver");
+            long totalDrivers   = driverRepository.count();
             long totalOrders    = orderRepository.count();
             long pendingDrivers = driverRepository.findByKycSubmittedTrueAndIsVerifiedFalse().size();
             long verifiedDrivers= driverRepository.findByIsVerifiedTrue().size();
@@ -94,7 +94,7 @@ public class AdminController {
             response.put("totalUsers",      usersPage.getTotalElements());
             response.put("totalFarmers",    userRepository.countByRole("farmer"));
             response.put("totalConsumers",  userRepository.countByRole("consumer"));
-            response.put("totalDrivers",    userRepository.countByRole("driver"));
+            response.put("totalDrivers",    driverRepository.count());
             response.put("totalAdmins",     userRepository.countByRole("admin"));
 
             return ResponseEntity.ok(response);
