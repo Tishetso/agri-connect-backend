@@ -80,18 +80,45 @@ public class AdminController {
             @RequestParam(required = false)    String search
     ) {
         try {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-            Page<User> usersPage = userRepository.findWithFilters(role, status, search, pageable);
+            List<Map<String, Object>> content = new ArrayList<>();
 
-            List<Map<String, Object>> content = usersPage.getContent().stream()
-                    .map(this::toUserMap)
-                    .collect(Collectors.toList());
+            boolean includeDrivers = role == null || "DRIVER".equalsIgnoreCase(role);
+            boolean includeUsers   = role == null || !"DRIVER".equalsIgnoreCase(role);
+
+            // ── Fetch regular users ──────────────────────────────────────────
+            if (includeUsers) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+                Page<User> usersPage = userRepository.findWithFilters(role, status, search, pageable);
+                usersPage.getContent().stream()
+                        .map(this::toUserMap)
+                        .forEach(content::add);
+            }
+
+            // ── Fetch drivers and map them as DRIVER-role users ──────────────
+            if (includeDrivers) {
+                driverRepository.findAll().stream()
+                        .filter(d -> {
+                            if (search == null || search.isBlank()) return true;
+                            String s = search.toLowerCase();
+                            String name  = d.getUser() != null ? d.getUser().getName()  : "";
+                            String email = d.getUser() != null ? d.getUser().getEmail() : "";
+                            return name.toLowerCase().contains(s) || email.toLowerCase().contains(s);
+                        })
+                        .filter(d -> {
+                            if (status == null) return true;
+                            String driverStatus = d.getUser() != null
+                                    ? d.getUser().getStatus() : "ACTIVE";
+                            return status.equalsIgnoreCase(driverStatus);
+                        })
+                        .map(this::driverToUserMap)   // ← new helper below
+                        .forEach(content::add);
+            }
 
             Map<String, Object> response = new HashMap<>();
             response.put("content",        content);
-            response.put("totalPages",      usersPage.getTotalPages());
-            response.put("totalElements",   usersPage.getTotalElements());
-            response.put("totalUsers",      usersPage.getTotalElements());
+            response.put("totalPages",      1);   // simplify or implement proper pagination
+            response.put("totalElements",   content.size());
+            response.put("totalUsers",      userRepository.count() + driverRepository.count());
             response.put("totalFarmers",    userRepository.countByRole("farmer"));
             response.put("totalConsumers",  userRepository.countByRole("consumer"));
             response.put("totalDrivers",    driverRepository.count());
@@ -102,7 +129,6 @@ public class AdminController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-
     @PutMapping("/users/{id}/suspend")
     public ResponseEntity<?> suspendUser(
             @PathVariable Long id,
@@ -345,5 +371,18 @@ public class AdminController {
         if (Boolean.TRUE.equals(d.getIsVerified()))   return "VERIFIED";
         if (Boolean.TRUE.equals(d.getKycSubmitted())) return "PENDING";
         return "REJECTED";
+    }
+
+    private Map<String, Object> driverToUserMap(Driver d) {
+        User u = d.getUser();
+        Map<String, Object> map = new HashMap<>();
+        map.put("id",        d.getId());
+        map.put("name",      u != null ? u.getName()  : "Unknown");
+        map.put("email",     u != null ? u.getEmail() : "");
+        map.put("role",      "DRIVER");
+        map.put("status",    u != null && u.getStatus() != null
+                ? u.getStatus().toUpperCase() : "ACTIVE");
+        map.put("createdAt", d.getCreatedAt());
+        return map;
     }
 }
