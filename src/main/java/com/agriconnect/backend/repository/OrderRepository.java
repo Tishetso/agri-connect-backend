@@ -1,6 +1,7 @@
 package com.agriconnect.backend.repository;
 
 import com.agriconnect.backend.model.Order;
+import com.agriconnect.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -44,4 +45,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Find orders by driver ID and delivery status
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.driver.id = :driverId AND o.deliveryStatus = :status ORDER BY o.createdAt DESC")
     List<Order> findByDriverIdAndDeliveryStatus(@Param("driverId") Long driverId, @Param("status") String status);
+
+    boolean existsByFarmer(User farmer);
+
+    boolean existsByConsumer(User consumer);
 }

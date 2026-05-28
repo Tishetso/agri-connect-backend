@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -74,6 +75,7 @@ public class AuthController {
         user.setLatitude(userDto.getLatitude());
         user.setLongitude(userDto.getLongitude());
 
+        user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully");
     }

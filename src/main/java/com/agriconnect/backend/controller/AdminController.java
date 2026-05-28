@@ -97,20 +97,19 @@ public class AdminController {
             // ── Fetch drivers and map them as DRIVER-role users ──────────────
             if (includeDrivers) {
                 driverRepository.findAll().stream()
+                        .filter(d -> Boolean.TRUE.equals(d.getIsVerified()))//only verified
                         .filter(d -> {
                             if (search == null || search.isBlank()) return true;
                             String s = search.toLowerCase();
-                            String name  = d.getUser() != null ? d.getUser().getName()  : "";
-                            String email = d.getUser() != null ? d.getUser().getEmail() : "";
-                            return name.toLowerCase().contains(s) || email.toLowerCase().contains(s);
+                            String name  = d.getName()  != null ? d.getName()  : "";
+                            String surname = d.getSurname() != null ? d.getSurname() : "";
+                            String email = d.getEmail() != null ? d.getEmail() : "";
+                            return name.toLowerCase().contains(s)
+                                    || surname.toLowerCase().contains(s)
+                                    || email.toLowerCase().contains(s);
                         })
-                        .filter(d -> {
-                            if (status == null) return true;
-                            String driverStatus = d.getUser() != null
-                                    ? d.getUser().getStatus() : "ACTIVE";
-                            return status.equalsIgnoreCase(driverStatus);
-                        })
-                        .map(this::driverToUserMap)   // ← new helper below
+                        .filter(d -> status == null) // Driver has no status field, skip status filter
+                        .map(this::driverToUserMap)
                         .forEach(content::add);
             }
 
@@ -118,10 +117,10 @@ public class AdminController {
             response.put("content",        content);
             response.put("totalPages",      1);   // simplify or implement proper pagination
             response.put("totalElements",   content.size());
-            response.put("totalUsers",      userRepository.count() + driverRepository.count());
+            response.put("totalUsers",      userRepository.count() + driverRepository.countByIsVerifiedTrue());
             response.put("totalFarmers",    userRepository.countByRole("farmer"));
             response.put("totalConsumers",  userRepository.countByRole("consumer"));
-            response.put("totalDrivers",    driverRepository.count());
+            response.put("totalDrivers",    driverRepository.countByIsVerifiedTrue());
             response.put("totalAdmins",     userRepository.countByRole("admin"));
 
             return ResponseEntity.ok(response);
@@ -167,8 +166,19 @@ public class AdminController {
             @RequestHeader("Authorization") String token
     ) {
         try {
-            if (!userRepository.existsById(id)) return ResponseEntity.notFound().build();
-            userRepository.deleteById(id);
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            boolean hasOrders = orderRepository.existsByFarmer(user)
+                    || orderRepository.existsByConsumer(user);
+
+            if (hasOrders) {
+                user.setStatus("DELETED");
+                userRepository.save(user);
+            } else {
+                userRepository.deleteById(id);
+            }
+
             return ResponseEntity.ok(Map.of("message", "User deleted"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -333,7 +343,9 @@ public class AdminController {
     private Map<String, Object> toUserMap(User u) {
         Map<String, Object> map = new HashMap<>();
         map.put("id",        u.getId());
-        map.put("name",      u.getName());
+        map.put("name",      u.getName() != null && u.getSurname() != null
+                ? u.getName() + " " + u.getSurname()
+                : u.getName() != null ? u.getName() : "Unknown");
         map.put("email",     u.getEmail());
         map.put("role",      u.getRole() != null ? u.getRole().toUpperCase() : "CONSUMER");
         map.put("status",    u.getStatus() != null ? u.getStatus().toUpperCase() : "ACTIVE");
@@ -374,14 +386,14 @@ public class AdminController {
     }
 
     private Map<String, Object> driverToUserMap(Driver d) {
-        User u = d.getUser();
         Map<String, Object> map = new HashMap<>();
         map.put("id",        d.getId());
-        map.put("name",      u != null ? u.getName()  : "Unknown");
-        map.put("email",     u != null ? u.getEmail() : "");
+        map.put("name",      (d.getName() != null && !d.getName().isBlank())
+                ? d.getName() + " " + (d.getSurname() != null ? d.getSurname() : "")
+                : "Unknown");
+        map.put("email",     d.getEmail() != null ? d.getEmail() : "");
         map.put("role",      "DRIVER");
-        map.put("status",    u != null && u.getStatus() != null
-                ? u.getStatus().toUpperCase() : "ACTIVE");
+        map.put("status",    "ACTIVE"); // Driver has no status field, default to ACTIVE
         map.put("createdAt", d.getCreatedAt());
         return map;
     }

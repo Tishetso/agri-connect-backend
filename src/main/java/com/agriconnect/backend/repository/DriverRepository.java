@@ -2,6 +2,7 @@ package com.agriconnect.backend.repository;
 
 import com.agriconnect.backend.model.Driver;
 import com.agriconnect.backend.model.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -25,6 +26,12 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
     List<Driver> findByKycSubmittedTrueAndIsVerifiedFalse();
 
     List<Driver>findByIsVerifiedTrue();
+
+    @EntityGraph(attributePaths = "user")
+    List<Driver> findAll();
+
+    /*Verified count*/
+    long countByIsVerifiedTrue();
 
 
 
