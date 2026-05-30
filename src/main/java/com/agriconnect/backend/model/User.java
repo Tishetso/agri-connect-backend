@@ -34,6 +34,13 @@ public class User {
     // NEW FIELDS
     private String phone;
 
+    // NEW
+    private String avatarUrl;
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+
     public String getPhone() {
         return phone;
     }

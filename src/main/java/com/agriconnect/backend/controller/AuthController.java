@@ -36,17 +36,18 @@ public class AuthController {
             User user = userOpt.get();
             if (passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
                 String token = jwtUtil.generateToken(user);
-                return ResponseEntity.ok(Map.of(
-                        "token",     token,
-                        "id",        user.getId(),
-                        "name",      user.getName(),
-                        "surname",   user.getSurname(),
-                        "email",     user.getEmail(),
-                        "role",      user.getRole(),
-                        "region",    user.getRegion() != null ? user.getRegion() : "",
-                        "phone",     user.getPhone()  != null ? user.getPhone()  : "",
-                        "status",    user.getStatus(),
-                        "createdAt", user.getCreatedAt().toString()
+                return ResponseEntity.ok(Map.ofEntries(
+                        Map.entry("token",     token),
+                        Map.entry("id",        user.getId()),
+                        Map.entry("name",      user.getName()),
+                        Map.entry("surname",   user.getSurname()),
+                        Map.entry("email",     user.getEmail()),
+                        Map.entry("role",      user.getRole()),
+                        Map.entry("region",    user.getRegion()    != null ? user.getRegion()    : ""),
+                        Map.entry("phone",     user.getPhone()     != null ? user.getPhone()     : ""),
+                        Map.entry("avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : ""),
+                        Map.entry("status",    user.getStatus()),
+                        Map.entry("createdAt", user.getCreatedAt().toString())
                 ));
             }
         }
