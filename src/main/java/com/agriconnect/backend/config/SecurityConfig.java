@@ -72,6 +72,8 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/listings/myListings").authenticated()
 
                         //Shopping cart - consumers only, authenticated
+                        .requestMatchers(HttpMethod.PUT, "/api/users/profile").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/profile").authenticated()
                                 .requestMatchers("/api/cart/**").authenticated()
 
                         //All other endpoints require authentication

@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -37,30 +36,36 @@ public class AuthController {
             User user = userOpt.get();
             if (passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
                 String token = jwtUtil.generateToken(user);
-                return ResponseEntity.ok(Map.of("token", token, "role", user.getRole(), "name", user.getName(),"surname", user.getSurname(),
-                        "region", user.getRegion()));
+                return ResponseEntity.ok(Map.of(
+                        "token",     token,
+                        "id",        user.getId(),
+                        "name",      user.getName(),
+                        "surname",   user.getSurname(),
+                        "email",     user.getEmail(),
+                        "role",      user.getRole(),
+                        "region",    user.getRegion() != null ? user.getRegion() : "",
+                        "phone",     user.getPhone()  != null ? user.getPhone()  : "",
+                        "status",    user.getStatus(),
+                        "createdAt", user.getCreatedAt().toString()
+                ));
             }
         }
         System.out.println("Login attempt for: " + loginDto.getEmail());
-
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Invalid credentials")); // ✅ JSON error
+                .body(Map.of("error", "Invalid credentials"));
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
 
-        //BLOCKS admin self registration
-        if("ADMIN".equalsIgnoreCase(userDto.getRole())){
+        if ("ADMIN".equalsIgnoreCase(userDto.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Admin accounts cannot be self-registered"));
         }
 
-        // Check if email already exists
         Optional<User> existingUser = userRepository.findByEmail(userDto.getEmail());
         if (existingUser.isPresent()) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT) // 409 Conflict
+            return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Email already exists");
         }
 
@@ -74,10 +79,10 @@ public class AuthController {
         user.setRegion(userDto.getRegion());
         user.setLatitude(userDto.getLatitude());
         user.setLongitude(userDto.getLongitude());
-
+        if (userDto.getPhone() != null) user.setPhone(userDto.getPhone());
         user.setCreatedAt(LocalDateTime.now());
+
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully");
     }
-
 }

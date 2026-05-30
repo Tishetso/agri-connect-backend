@@ -11,6 +11,17 @@ public class UserDto {
     private Double latitude;
     private Double longitude;
 
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    //new additions
+    private String phone;
+
     public String getName() {
         return name;
     }

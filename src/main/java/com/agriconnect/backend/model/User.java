@@ -31,6 +31,19 @@ public class User {
     private String resetToken;
     private Date tokenExpiry;
 
+    // NEW FIELDS
+    private String phone;
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+
+
     public String getResetToken() {
         return resetToken;
     }
